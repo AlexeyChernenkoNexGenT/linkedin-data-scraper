@@ -33,8 +33,10 @@ async def main():
       })
       await page.waitForSelector('#main')
       await page.waitFor(100)
-      await page.evaluate('window.scrollBy(0,1500)')
-      await page.waitFor(500)
+      await page.evaluate('window.scrollBy(0,600)')
+      await page.waitFor(100)
+      await page.evaluate('window.scrollBy(0,600)')
+      await page.waitFor(400)
       jobs = await page.evaluate('''() => {
         const experienceElements = [
           ...document.querySelectorAll('#experience-section .pv-profile-section'),
