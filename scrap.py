@@ -3,8 +3,10 @@ import datetime
 import pandas as pd
 from pyppeteer import launch
 from decouple import config
+import time
 
 async def main():
+    startTime = datetime.datetime.now()
     LINKED_IN_USERNAME = config('LINKED_IN_USERNAME')
     LINKED_IN_PASSWORD = config('LINKED_IN_PASSWORD')
     if not LINKED_IN_USERNAME:
@@ -109,7 +111,8 @@ async def main():
     outputDf = pd.DataFrame(result)
     output_file_name = "data/output.csv"
     outputDf.to_csv(output_file_name, encoding='utf-8', index=False)
-    print('DONE')
+    endTime = datetime.datetime.now()
+    print('DONE', endTime - startTime)
     print('the result has been saved to', output_file_name, 'file')
 
 asyncio.get_event_loop().run_until_complete(main())
