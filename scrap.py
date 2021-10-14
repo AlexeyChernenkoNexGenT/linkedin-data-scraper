@@ -43,13 +43,7 @@ async def main():
         ];
         if (!experienceElements.length) {
           console.log('student has no job');
-          return [
-            {
-              companyName: 'no job found',
-              jobTitle: '-',
-              jobStartDate: '-',
-            },
-          ];
+          return [];
         }
         const getJobStartDate = element => {
           const [startDateText] = element
