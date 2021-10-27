@@ -10,11 +10,19 @@ const {
   OUTPUT_FILE_PATH,
 } = process.env;
 
+const CSV_SCHEMA = {
+  url: "linkedin URL",
+};
+
+const URL_PROTOCOL_SUB_DOMAIN_REGEX = /^https:\/\/www\./gim;
+const LINKEDIN_URL_PATH_REGEX = /linkedin\.com\/in\/.+/gim;
+
 const parseCsvFile = (path) =>
   parser(fs.readFileSync(path).toString("utf8"), {
     delimiter: ",",
     quote: '"',
     columns: true,
+    trim: true,
   });
 
 const saveCsvFile = (path, records) =>
@@ -40,7 +48,7 @@ const login = async (page, username, password) => {
 };
 
 const scrapePage = async (page, user) => {
-  const linkedInUrl = user["linkedin URL"];
+  const linkedInUrl = user[CSV_SCHEMA.url];
   console.log("start processing", linkedInUrl);
   await page.goto(linkedInUrl, {
     waitUntil: ["load", "domcontentloaded"],
@@ -112,13 +120,36 @@ const scrapePage = async (page, user) => {
     Firstname: user["Firstname"],
     Lastname: user["Lastname"],
     Email: user["Email"],
-    "linkedin URL": linkedInUrl,
+    [CSV_SCHEMA.url]: linkedInUrl,
     "Date of Scrape": new Date().toISOString(),
     "Job Title": job["jobTitle"],
     "Employer Name": job["companyName"],
     "Job Start Date": job["jobStartDate"],
   }));
 };
+
+const validate = (users) =>
+  users
+    .filter((user) => {
+      const url = user[CSV_SCHEMA.url];
+      if (!url || !url.match(LINKEDIN_URL_PATH_REGEX)) {
+        console.log("the record has invalid url", user);
+        return false;
+      }
+      return true;
+    })
+    .map((user) => {
+      const url = user[CSV_SCHEMA.url];
+      let newUrl = url;
+      if (!URL_PROTOCOL_SUB_DOMAIN_REGEX.test(url)) {
+        const path = url.match(LINKEDIN_URL_PATH_REGEX);
+        newUrl = `https://www.${path}`;
+      }
+      return {
+        ...user,
+        [CSV_SCHEMA.url]: newUrl,
+      };
+    });
 
 (async () => {
   const startTime = Date.now();
@@ -129,7 +160,7 @@ const scrapePage = async (page, user) => {
     throw new Error("Please specify LINKED_IN_PASSWORD in the env.local file.");
   }
   const records = [];
-  const users = parseCsvFile(INPUT_FILE_PATH);
+  const users = validate(parseCsvFile(INPUT_FILE_PATH));
   if (!users.length) {
     console.log("There's nothing to process. The input CSV file has no rows");
     return;
