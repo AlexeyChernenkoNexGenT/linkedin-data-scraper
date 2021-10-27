@@ -44,9 +44,9 @@ const login = async (page, username, password) => {
   console.log("logged in successfully");
 };
 
-const scrapePage = async (page, user) => {
+const scrapePage = async (page, index, user) => {
   const linkedInUrl = user[LINKEDIN_URL_CSV_COLUMN_NAME];
-  console.log("start processing", linkedInUrl);
+  console.log(`[${index}] start processing`, linkedInUrl);
   await page.goto(linkedInUrl, {
     waitUntil: ["load", "domcontentloaded"],
   });
@@ -112,7 +112,12 @@ const scrapePage = async (page, user) => {
     const [theMostRecentJobPosition] = experienceElements;
     return getJobPositionInfoList(theMostRecentJobPosition);
   });
-  console.log("record processed", linkedInUrl, "jobs found:", jobs.length);
+  console.log(
+    `[${index}] record processed`,
+    linkedInUrl,
+    "jobs found:",
+    jobs.length
+  );
   return jobs.map((job) => ({
     ...user,
     "Date of Scrape": new Date().toISOString(),
@@ -168,9 +173,9 @@ const validate = (users) =>
   await login(page, LINKED_IN_USERNAME, LINKED_IN_PASSWORD);
   await page.screenshot({ path: "login.png" });
 
-  while (users.length) {
+  for (let i = 0; i < users.length; i++) {
     const [user] = users.splice(0, 1);
-    records.push(...(await scrapePage(page, user)));
+    records.push(...(await scrapePage(page, i, user)));
   }
 
   await browser.close();
