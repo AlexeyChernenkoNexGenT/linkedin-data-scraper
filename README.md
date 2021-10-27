@@ -4,7 +4,8 @@ The script analyzes student LinkedIn accounts to figure out the current employme
 
 ## Prerequisites
 
-1.  run `install-dependencies.sh` to install script's dependencies
+1.  install node.js and yarn
+1.  run `yarn install` to install script's dependencies
 
 ## How to run the script
 

@@ -2,4 +2,4 @@
 
 . ./env.local
 
-python scrap.py
+node index.js
