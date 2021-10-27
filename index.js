@@ -8,11 +8,8 @@ const {
   LINKED_IN_PASSWORD,
   INPUT_FILE_PATH,
   OUTPUT_FILE_PATH,
+  LINKEDIN_URL_CSV_COLUMN_NAME,
 } = process.env;
-
-const CSV_SCHEMA = {
-  url: "linkedin URL",
-};
 
 const URL_PROTOCOL_SUB_DOMAIN_REGEX = /^https:\/\/www\./gim;
 const LINKEDIN_URL_PATH_REGEX = /linkedin\.com\/in\/.+/gim;
@@ -48,7 +45,7 @@ const login = async (page, username, password) => {
 };
 
 const scrapePage = async (page, user) => {
-  const linkedInUrl = user[CSV_SCHEMA.url];
+  const linkedInUrl = user[LINKEDIN_URL_CSV_COLUMN_NAME];
   console.log("start processing", linkedInUrl);
   await page.goto(linkedInUrl, {
     waitUntil: ["load", "domcontentloaded"],
@@ -117,10 +114,7 @@ const scrapePage = async (page, user) => {
   });
   console.log("record processed", linkedInUrl, "jobs found:", jobs.length);
   return jobs.map((job) => ({
-    Firstname: user["Firstname"],
-    Lastname: user["Lastname"],
-    Email: user["Email"],
-    [CSV_SCHEMA.url]: linkedInUrl,
+    ...user,
     "Date of Scrape": new Date().toISOString(),
     "Job Title": job["jobTitle"],
     "Employer Name": job["companyName"],
@@ -131,7 +125,7 @@ const scrapePage = async (page, user) => {
 const validate = (users) =>
   users
     .filter((user) => {
-      const url = user[CSV_SCHEMA.url];
+      const url = user[LINKEDIN_URL_CSV_COLUMN_NAME];
       if (!url || !url.match(LINKEDIN_URL_PATH_REGEX)) {
         console.log("the record has invalid url", user);
         return false;
@@ -139,7 +133,7 @@ const validate = (users) =>
       return true;
     })
     .map((user) => {
-      const url = user[CSV_SCHEMA.url];
+      const url = user[LINKEDIN_URL_CSV_COLUMN_NAME];
       let newUrl = url;
       if (!URL_PROTOCOL_SUB_DOMAIN_REGEX.test(url)) {
         const path = url.match(LINKEDIN_URL_PATH_REGEX);
@@ -147,7 +141,7 @@ const validate = (users) =>
       }
       return {
         ...user,
-        [CSV_SCHEMA.url]: newUrl,
+        [LINKEDIN_URL_CSV_COLUMN_NAME]: newUrl,
       };
     });
 
