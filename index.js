@@ -14,6 +14,12 @@ const {
 const URL_PROTOCOL_SUB_DOMAIN_REGEX = /^https:\/\/www\./gim;
 const LINKEDIN_URL_PATH_REGEX = /linkedin\.com\/in\/.+/gim;
 
+const getRandomInt = (min, max) => {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min) + min);
+};
+
 const parseCsvFile = (path) =>
   parser(fs.readFileSync(path).toString("utf8"), {
     delimiter: ",",
@@ -54,7 +60,7 @@ const scrapePage = async (page, index, user) => {
   await page.evaluate("window.scrollBy(0,600)");
   await page.waitForTimeout(500);
   await page.evaluate("window.scrollBy(0,600)");
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(getRandomInt(10000, 15000));
   const jobs = await page.evaluate(() => {
     const experienceElements = [
       ...document.querySelectorAll("#experience-section .pv-profile-section"),
@@ -150,8 +156,7 @@ const validate = (users) =>
       };
     });
 
-(async () => {
-  const startTime = Date.now();
+const main = async () => {
   if (!LINKED_IN_USERNAME) {
     throw new Error("Please specify LINKED_IN_USERNAME in the env.local file.");
   }
@@ -164,7 +169,7 @@ const validate = (users) =>
     console.log("There's nothing to process. The input CSV file has no rows");
     return;
   }
-  console.table(users);
+  console.log("found user to process:", users.length);
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
   await page.goto("https://www.linkedin.com/login", {
@@ -174,14 +179,24 @@ const validate = (users) =>
   await page.screenshot({ path: "login.png" });
 
   for (let i = 0; i < users.length; i++) {
-    const [user] = users.splice(0, 1);
-    records.push(...(await scrapePage(page, i, user)));
+    records.push(...(await scrapePage(page, i, users[i])));
   }
 
   await browser.close();
 
   saveCsvFile(OUTPUT_FILE_PATH, records);
-  const endTime = Date.now();
-  console.log("DONE", msToTime(endTime - startTime));
   console.log("the result has been saved to", OUTPUT_FILE_PATH, "file");
+};
+
+(async () => {
+  const startTime = Date.now();
+  try {
+    await main();
+    console.log("DONE");
+  } catch (err) {
+    console.error(err);
+  } finally {
+    const endTime = Date.now();
+    console.log("Elapsed:", msToTime(endTime - startTime));
+  }
 })();
