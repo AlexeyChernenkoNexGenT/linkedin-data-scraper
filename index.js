@@ -188,6 +188,7 @@ const main = async () => {
   console.log("found user to process:", users.length);
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
+  await page.setCacheEnabled(true);
   await page.goto("https://www.linkedin.com/login", {
     waitUntil: ["load", "domcontentloaded", "networkidle0"],
   });
