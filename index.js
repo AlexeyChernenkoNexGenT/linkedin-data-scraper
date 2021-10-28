@@ -42,11 +42,26 @@ const msToTime = (duration) => {
   return hours + ":" + minutes + ":" + seconds + "." + milliseconds;
 };
 
+const assertAccountActive = async (page) => {
+  const isAccountBanned = await page.evaluate(() => {
+    const headerElement = document.querySelector("main > h1:first-child");
+    return (
+      headerElement &&
+      headerElement.innerText === "Your account has been restricted"
+    );
+  });
+  if (isAccountBanned) {
+    throw new Error("The account has been banned.");
+  }
+};
+
 const login = async (page, username, password) => {
   await page.type("#username", username);
   await page.type("#password", password);
   await page.click("form.login__form button[type=submit]");
   await page.waitForNavigation();
+  await page.waitForTimeout(500);
+  await assertAccountActive(page);
   console.log("logged in successfully");
 };
 
@@ -56,7 +71,8 @@ const scrapePage = async (page, index, user) => {
   await page.goto(linkedInUrl, {
     waitUntil: ["load", "domcontentloaded"],
   });
-  await page.waitForTimeout(800);
+  await page.waitForTimeout(1000);
+  await assertAccountActive(page);
   await page.evaluate("window.scrollBy(0,600)");
   await page.waitForTimeout(500);
   await page.evaluate("window.scrollBy(0,600)");
