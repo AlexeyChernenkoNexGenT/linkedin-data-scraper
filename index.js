@@ -75,11 +75,12 @@ const scrapePage = async (page, index, user) => {
     waitUntil: ["load", "domcontentloaded"],
   });
   await page.waitForTimeout(1000);
-  await assertAccountActive(page);
   await page.evaluate("window.scrollBy(0,600)");
   await page.waitForTimeout(500);
   await page.evaluate("window.scrollBy(0,600)");
-  await page.waitForTimeout(getRandomInt(10000, 15000));
+  const delayMs = getRandomInt(55000, 65000);
+  log('waiting', msToTime(delayMs));
+  await page.waitForTimeout(delayMs);
   const jobs = await page.evaluate(() => {
     const experienceElements = [
       ...document.querySelectorAll("#experience-section .pv-profile-section"),
@@ -137,12 +138,12 @@ const scrapePage = async (page, index, user) => {
     const [theMostRecentJobPosition] = experienceElements;
     return getJobPositionInfoList(theMostRecentJobPosition);
   });
-  log(
-    `[${index}] record processed`,
-    linkedInUrl,
-    "jobs found:",
-    jobs.length
-  );
+  // Navigate to the home page just to simulate human behavior.
+  await page.goto("https://www.linkedin.com/feed/", {
+    waitUntil: ["load", "domcontentloaded"],
+  });
+  await page.waitForTimeout(3000);
+  log(`[${index}] record processed`, linkedInUrl, "jobs found:", jobs.length);
   return jobs.map((job) => ({
     ...user,
     "Date of Scrape": new Date().toISOString(),
