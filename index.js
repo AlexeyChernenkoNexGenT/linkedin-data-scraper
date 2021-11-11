@@ -9,8 +9,11 @@ const {
   OUTPUT_FILE_PATH,
   LINKEDIN_URL_CSV_COLUMN_NAME,
   BATCH_SIZE,
+  DELAY_BETWEEN_REQUESTS_MS,
 } = process.env;
 
+const MIN_DELAY_BETWEEN_REQUESTS_MS = Number(DELAY_BETWEEN_REQUESTS_MS);
+const MAX_DELAY_BETWEEN_REQUESTS_MS = MIN_DELAY_BETWEEN_REQUESTS_MS * 1.2;
 const URL_PROTOCOL_SUB_DOMAIN_REGEX = /^https:\/\/www\./gim;
 const LINKEDIN_URL_PATH_REGEX = /linkedin\.com\/in\/.+/gim;
 
@@ -88,7 +91,10 @@ const scrapePage = async (page, index, user, threadId) => {
   await page.evaluate("window.scrollBy(0,600)");
   await page.waitForTimeout(500);
   await page.evaluate("window.scrollBy(0,600)");
-  const delayMs = getRandomInt(55000, 65000);
+  const delayMs = getRandomInt(
+    MIN_DELAY_BETWEEN_REQUESTS_MS,
+    MAX_DELAY_BETWEEN_REQUESTS_MS
+  );
   log(`[ThreadID=${threadId}] waiting`, msToTime(delayMs));
   await page.waitForTimeout(delayMs);
   const jobs = await page.evaluate(() => {
@@ -153,7 +159,12 @@ const scrapePage = async (page, index, user, threadId) => {
     waitUntil: ["load", "domcontentloaded"],
   });
   await page.waitForTimeout(3000);
-  log(`[ThreadID=${threadId}][${index}] record processed`, linkedInUrl, "jobs found:", jobs.length);
+  log(
+    `[ThreadID=${threadId}][${index}] record processed`,
+    linkedInUrl,
+    "jobs found:",
+    jobs.length
+  );
   return jobs.map((job) => ({
     ...user,
     "Date of Scrape": new Date().toISOString(),
