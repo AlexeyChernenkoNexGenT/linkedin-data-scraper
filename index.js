@@ -14,6 +14,9 @@ const {
 const URL_PROTOCOL_SUB_DOMAIN_REGEX = /^https:\/\/www\./gim;
 const LINKEDIN_URL_PATH_REGEX = /linkedin\.com\/in\/.+/gim;
 
+const log = (...params) =>
+  console.log(`[${new Date().toISOString()}]`, ...params);
+
 const getRandomInt = (min, max) => {
   min = Math.ceil(min);
   max = Math.floor(max);
@@ -62,12 +65,12 @@ const login = async (page, username, password) => {
   await page.waitForNavigation();
   await page.waitForTimeout(500);
   await assertAccountActive(page);
-  console.log("logged in successfully");
+  log("logged in successfully");
 };
 
 const scrapePage = async (page, index, user) => {
   const linkedInUrl = user[LINKEDIN_URL_CSV_COLUMN_NAME];
-  console.log(`[${index}] start processing`, linkedInUrl);
+  log(`[${index}] start processing`, linkedInUrl);
   await page.goto(linkedInUrl, {
     waitUntil: ["load", "domcontentloaded"],
   });
@@ -134,7 +137,7 @@ const scrapePage = async (page, index, user) => {
     const [theMostRecentJobPosition] = experienceElements;
     return getJobPositionInfoList(theMostRecentJobPosition);
   });
-  console.log(
+  log(
     `[${index}] record processed`,
     linkedInUrl,
     "jobs found:",
@@ -154,7 +157,7 @@ const validate = (users) =>
     .filter((user) => {
       const url = user[LINKEDIN_URL_CSV_COLUMN_NAME];
       if (!url || !url.match(LINKEDIN_URL_PATH_REGEX)) {
-        console.log("the record has invalid url", user);
+        log("the record has invalid url", user);
         return false;
       }
       return true;
@@ -182,10 +185,10 @@ const main = async () => {
   const records = [];
   const users = validate(parseCsvFile(INPUT_FILE_PATH));
   if (!users.length) {
-    console.log("There's nothing to process. The input CSV file has no rows");
+    log("There's nothing to process. The input CSV file has no rows");
     return;
   }
-  console.log("found user to process:", users.length);
+  log("found user to process:", users.length);
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
   await page.setCacheEnabled(true);
@@ -202,18 +205,18 @@ const main = async () => {
   await browser.close();
 
   saveCsvFile(OUTPUT_FILE_PATH, records);
-  console.log("the result has been saved to", OUTPUT_FILE_PATH, "file");
+  log("the result has been saved to", OUTPUT_FILE_PATH, "file");
 };
 
 (async () => {
   const startTime = Date.now();
   try {
     await main();
-    console.log("DONE");
+    log("DONE");
   } catch (err) {
     console.error(err);
   } finally {
     const endTime = Date.now();
-    console.log("Elapsed:", msToTime(endTime - startTime));
+    log("Elapsed:", msToTime(endTime - startTime));
   }
 })();
