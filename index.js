@@ -79,7 +79,7 @@ const scrapePage = async (page, index, user) => {
   await page.waitForTimeout(500);
   await page.evaluate("window.scrollBy(0,600)");
   const delayMs = getRandomInt(55000, 65000);
-  log('waiting', msToTime(delayMs));
+  log("waiting", msToTime(delayMs));
   await page.waitForTimeout(delayMs);
   const jobs = await page.evaluate(() => {
     const experienceElements = [
@@ -176,20 +176,17 @@ const validate = (users) =>
       };
     });
 
-const main = async () => {
-  if (!LINKED_IN_USERNAME) {
-    throw new Error("Please specify LINKED_IN_USERNAME in the env.local file.");
-  }
-  if (!LINKED_IN_PASSWORD) {
-    throw new Error("Please specify LINKED_IN_PASSWORD in the env.local file.");
-  }
-  const records = [];
-  const users = validate(parseCsvFile(INPUT_FILE_PATH));
+const scrapeUsingAccount = async (userName, password, users) => {
   if (!users.length) {
-    log("There's nothing to process. The input CSV file has no rows");
     return;
   }
-  log("found user to process:", users.length);
+  if (!userName) {
+    throw new Error("UserName is required");
+  }
+  if (!password) {
+    throw new Error("Password is required");
+  }
+  const records = [];
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
   await page.setCacheEnabled(true);
@@ -204,6 +201,29 @@ const main = async () => {
   }
 
   await browser.close();
+
+  return records;
+};
+
+const main = async () => {
+  if (!LINKED_IN_USERNAME) {
+    throw new Error("Please specify LINKED_IN_USERNAME in the env.local file.");
+  }
+  if (!LINKED_IN_PASSWORD) {
+    throw new Error("Please specify LINKED_IN_PASSWORD in the env.local file.");
+  }
+  const users = validate(parseCsvFile(INPUT_FILE_PATH));
+  if (!users.length) {
+    log("There's nothing to process. The input CSV file has no rows");
+    return;
+  }
+  log("found user to process:", users.length);
+
+  const records = await scrapeUsingAccount(
+    LINKED_IN_USERNAME,
+    LINKED_IN_PASSWORD,
+    users
+  );
 
   saveCsvFile(OUTPUT_FILE_PATH, records);
   log("the result has been saved to", OUTPUT_FILE_PATH, "file");
