@@ -8,7 +8,7 @@ const {
   INPUT_FILE_PATH,
   OUTPUT_FILE_PATH,
   LINKEDIN_URL_CSV_COLUMN_NAME,
-  BATCH_SIZE,
+  MAX_NUMBER_OF_PROCESSED_PROFILES_PER_ACCOUNT,
   DELAY_BETWEEN_REQUESTS_MS,
 } = process.env;
 
@@ -236,10 +236,12 @@ const scrapeUsingAccount = async (userName, password, users, threadId) => {
 };
 
 const main = async () => {
-  if (!BATCH_SIZE) {
-    throw new Error("Please specify BATCH_SIZE in the env.local file.");
+  if (!MAX_NUMBER_OF_PROCESSED_PROFILES_PER_ACCOUNT) {
+    throw new Error(
+      "Please specify MAX_NUMBER_OF_PROCESSED_PROFILES_PER_ACCOUNT in the env.local file."
+    );
   }
-  const batchSize = Number(BATCH_SIZE);
+  const batchSize = Number(MAX_NUMBER_OF_PROCESSED_PROFILES_PER_ACCOUNT);
   if (!LINKED_IN_ACCOUNTS) {
     throw new Error("Please specify LINKED_IN_ACCOUNTS in the env.local file.");
   }
@@ -257,7 +259,7 @@ const main = async () => {
   log("found user to process:", users.length);
   if (Math.ceil(users.length / batchSize) > accounts.length) {
     throw new Error(
-      `There's not enough linkedIn accounts specified to process ${users.length} users. Each linkedIn account can process up to ${BATCH_SIZE} profiles.`
+      `There's not enough linkedIn accounts specified to process ${users.length} users. Each linkedIn account can process up to ${MAX_NUMBER_OF_PROCESSED_PROFILES_PER_ACCOUNT} profiles.`
     );
   }
 
