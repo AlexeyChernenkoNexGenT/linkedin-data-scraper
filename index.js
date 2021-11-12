@@ -218,7 +218,6 @@ const scrapeUsingAccount = async (userName, password, users, threadId) => {
     waitUntil: ["load", "domcontentloaded", "networkidle0"],
   });
   await login(page, userName, password);
-  await page.screenshot({ path: "login.png" });
 
   for (let i = 0; i < users.length; i++) {
     const index = i + 1;
