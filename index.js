@@ -214,7 +214,7 @@ const scrapeUsingAccount = async (userName, password, users, threadId) => {
   await page.goto("https://www.linkedin.com/login", {
     waitUntil: ["load", "domcontentloaded", "networkidle0"],
   });
-  await login(page, LINKED_IN_USERNAME, LINKED_IN_PASSWORD);
+  await login(page, userName, password);
   await page.screenshot({ path: "login.png" });
 
   for (let i = 0; i < users.length; i++) {
