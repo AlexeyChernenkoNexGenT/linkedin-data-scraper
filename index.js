@@ -71,6 +71,9 @@ const assertAccountActive = async (page) => {
   }
 };
 
+const isCaptchaRequired = async (page) =>
+  (await page.$("#captchaInternalPath")) !== null;
+
 const login = async (page, username, password) => {
   await page.type("#username", username);
   await page.type("#password", password);
@@ -218,7 +221,14 @@ const scrapeUsingAccount = async (userName, password, users, threadId) => {
   await page.screenshot({ path: "login.png" });
 
   for (let i = 0; i < users.length; i++) {
-    records.push(...(await scrapePage(page, i + 1, users[i], threadId)));
+    const index = i + 1;
+    if (await isCaptchaRequired(page)) {
+      log(
+        `[ThreadID=${threadId}][${index}][${userName}] !!! PROCESSING IS STOPPED !!! Captcha is required.`
+      );
+      break;
+    }
+    records.push(...(await scrapePage(page, index, users[i], threadId)));
   }
 
   await browser.close();
